@@ -1,19 +1,135 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My Free App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Form with Refresh Warning</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        form input[type="text"],
+        form input[type="email"],
+        form textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        form textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        form button {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        form button:hover {
+            background-color: #0056b3;
+        }
+        p.info {
+            background-color: #e7f3fe;
+            border-left: 6px solid #2196F3;
+            padding: 10px;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+    </style>
 </head>
 <body>
-  <h1>My Personal App</h1>
-  <p>This is a free web app</p>
 
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js");
-    }
-    {overscroll-behavior-y:none}
-  </script>
+    <div class="container">
+        <h1>Contact Us</h1>
+        <p class="info">
+            <strong>Try this:</strong> Form mein kuch type karein, phir page ko refresh (F5 daba kar ya browser ke reload button se) karne ki koshish karein. Aapko ek warning message dikhega!
+        </p>
+        <p class="info">
+            Agar aap bina kuch type kiye refresh karenge, toh warning nahi aayegi (browser ki security policy ke karan).
+        </p>
+
+        <form id="myForm">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="message">Message:</label>
+            <textarea id="message" name="message" required></textarea>
+
+            <button type="submit">Submit Form</button>
+        </form>
+    </div>
+
+    <script>
+        // 1. Ek variable jo track karega ki form mein koi change hua hai ya nahi
+        let isFormDirty = false;
+
+        // 2. Form element ko pakdein
+        const myForm = document.getElementById('myForm');
+
+        // 3. Form ke andar kisi bhi input ya textarea mein kuch bhi type hone par
+        //    isFormDirty ko true kar dein.
+        //    'input' event har keystroke par chalta hai.
+        myForm.addEventListener('input', () => {
+            isFormDirty = true;
+            console.log("Form data changed! isFormDirty:", isFormDirty); // Console mein dekhein
+        });
+
+        // 4. Jab user page chhodne ki koshish kare (refresh, tab close, back/forward button)
+        window.onbeforeunload = function(e) {
+            if (isFormDirty) {
+                // Browser ko batayein ki user ko confirm karna hai
+                // Ye lines modern browsers ke liye zaruri hain
+                e.preventDefault();
+                e.returnValue = ''; // Purane browsers ke liye
+                return '';          // Chrome/Edge ke liye (ye dikhaya jaata hai)
+            }
+            // Agar isFormDirty false hai, to koi warning nahi dikhegi
+        };
+
+        // 5. Jab user form submit kar deta hai, tab warning ki zarurat nahi hai
+        //    isliye isFormDirty ko wapas false kar dein.
+        myForm.addEventListener('submit', () => {
+            isFormDirty = false;
+            console.log("Form submitted, isFormDirty set to false."); // Console mein dekhein
+            // Yahan aap form submit karne ka further logic add kar sakte hain (e.g., AJAX call)
+            alert("Form submitted successfully! (Real submission logic here)");
+            // Agar aap server side par redirect nahi kar rahe hain aur page wahi rehta hai,
+            // to isFormDirty ko false rakhna sahi hai.
+        });
+    </script>
+
 </body>
 </html>
