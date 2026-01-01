@@ -3,131 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Car File Check</title>
-
+<title>Car Audit</title>
 <style>
-body{
-  font-family: Arial, sans-serif;
-  background:#f4f6fb;
-  padding:12px;
-}
-.card{
-  max-width:520px;
-  margin:auto;
-  background:#fff;
-  padding:15px;
-  border-radius:10px;
-  box-shadow:0 2px 8px rgba(0,0,0,.1);
-}
-h3,h4{margin:8px 0;}
-select,input,button{
-  width:100%;
-  padding:9px;
-  margin-top:8px;
-  font-size:14px;
-}
-button{
-  background:#667eea;
-  color:#fff;
-  border:none;
-  border-radius:6px;
-}
-.doc{
-  border:1px solid #ddd;
-  padding:10px;
-  border-radius:6px;
-  margin-top:10px;
-}
-.doc-title{
-  font-weight:bold;
-  margin-bottom:6px;
-}
-.radio-line{
-  display:flex;
-  align-items:center;
-  gap:15px;
-}
-.radio-line label{
-  display:flex;
-  align-items:center;
-  gap:5px;
-  font-size:14px;
-}
-.remark{
-  display:none;
-  margin-top:6px;
-}
+body{font-family:Arial;background:#f4f6fb;padding:12px}
+.card{max-width:520px;margin:auto;background:#fff;padding:15px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+select,input,button{width:100%;padding:9px;margin-top:8px;font-size:14px}
+button{background:#667eea;color:#fff;border:none;border-radius:6px}
+.doc{border:1px solid #ddd;padding:10px;border-radius:6px;margin-top:10px}
+.doc-title{font-weight:bold;margin-bottom:6px}
+.radio-line{display:flex;align-items:center;gap:15px}
+.radio-line label{display:flex;align-items:center;gap:5px;font-size:14px}
+.remark{display:none;margin-top:6px}
 </style>
 </head>
-
 <body>
-
 <div class="card">
-  <h3>Car File Check</h3>
-
-  <!-- REG NO DROPDOWN -->
-  <label>Car Reg No</label>
-  <select id="regNo" onchange="loadCar()">
-    <option value="">Select Reg No</option>
-  </select>
-
-  <!-- SALE / PURCHASE -->
-  <label>Type</label>
-  <select id="type" onchange="reloadType()">
-    <option value="SALE">Sale</option>
-    <option value="PURCHASE">Purchase</option>
-  </select>
-
-  <!-- AUTO LOADED FROM EXCEL -->
-  <input id="model" placeholder="Model" disabled>
-  <input id="amount" placeholder="Amount" disabled>
-  <input id="date" type="date" disabled>
-
-  <hr>
-
-  <h4>Documents</h4>
-
-  <!-- RC -->
-  <div class="doc">
-    <div class="doc-title">RC</div>
-    <div class="radio-line">
-      <label><input type="radio" name="rc" value="Yes" onclick="toggleRemark('rc',false)"> Yes</label>
-      <label><input type="radio" name="rc" value="No" onclick="toggleRemark('rc',true)"> No</label>
-    </div>
-    <input id="rc_remark" class="remark" placeholder="RC Remark">
-  </div>
-
-  <!-- INSURANCE -->
-  <div class="doc">
-    <div class="doc-title">Insurance</div>
-    <div class="radio-line">
-      <label><input type="radio" name="ins" value="Yes" onclick="toggleRemark('ins',false)"> Yes</label>
-      <label><input type="radio" name="ins" value="No" onclick="toggleRemark('ins',true)"> No</label>
-    </div>
-    <input id="ins_remark" class="remark" placeholder="Insurance Remark">
-  </div>
-
-  <!-- PUC -->
-  <div class="doc">
-    <div class="doc-title">PUC</div>
-    <div class="radio-line">
-      <label><input type="radio" name="puc" value="Yes" onclick="toggleRemark('puc',false)"> Yes</label>
-      <label><input type="radio" name="puc" value="No" onclick="toggleRemark('puc',true)"> No</label>
-    </div>
-    <input id="puc_remark" class="remark" placeholder="PUC Remark">
-  </div>
-
-  <button onclick="submitData()">Save / Recheck</button>
-  <p id="msg"></p>
+<h3>Car Audit</h3>
+<label>Car Reg No</label>
+<select id="regNo" onchange="loadCar()"><option value="">Select Reg No</option></select>
+<label>Type</label>
+<select id="type" onchange="reloadType()">
+  <option value="SALE">Sale</option>
+  <option value="PURCHASE">Purchase</option>
+</select>
+<input id="model" placeholder="Model" disabled>
+<input id="amount" placeholder="Amount" disabled>
+<input id="date" type="date" disabled>
+<hr>
+<div id="docsContainer"></div>
+<button onclick="submitData()">Save / Recheck</button>
+<p id="msg"></p>
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwFherN-MJn4lxc5dFCKikjYx1vqm-NymFj0Eb833Wqk0fQKBpUs1s0JVXobZvQ3b74/exec";
+const SCRIPT_URL = "PASTE_YOUR_DEPLOYED_WEB_APP_URL_HERE";
 
-/* Load Reg No list */
-fetch(SCRIPT_URL + "?action=list")
-.then(r=>r.json())
-.then(list=>{
+// Load Reg No list
+fetch(SCRIPT_URL+"?action=list").then(r=>r.json()).then(list=>{
   list.forEach(c=>{
     let o=document.createElement("option");
     o.value=c.regNo;
@@ -138,71 +50,74 @@ fetch(SCRIPT_URL + "?action=list")
   });
 });
 
-/* Load car data */
+// Load car info
 function loadCar(){
-  let opt = regNo.selectedOptions[0];
+  let opt=regNo.selectedOptions[0];
   if(!opt) return;
-
-  let sale = opt.dataset.sale==="true";
-  let purchase = opt.dataset.purchase==="true";
-
-  if(sale && purchase){
-    type.disabled=false;
-  }else if(sale){
-    type.value="SALE";
-    type.disabled=true;
-  }else{
-    type.value="PURCHASE";
-    type.disabled=true;
-  }
+  let sale=opt.dataset.sale=="true";
+  let purchase=opt.dataset.purchase=="true";
+  if(sale && purchase){ type.disabled=false; } 
+  else if(sale){ type.value="SALE"; type.disabled=true; } 
+  else { type.value="PURCHASE"; type.disabled=true; }
   reloadType();
 }
 
 function reloadType(){
   if(!regNo.value) return;
-
   fetch(`${SCRIPT_URL}?action=load&regNo=${regNo.value}&type=${type.value}`)
   .then(r=>r.json())
   .then(d=>{
-    model.value=d.model || "";
-    amount.value=d.amount || "";
-    date.value=d.date || "";
+    model.value=d.model||"";
+    amount.value=d.amount||"";
+    date.value=d.date||"";
+    renderDocs(d.docs || []);
   });
 }
 
-/* Remark toggle */
-function toggleRemark(id,show){
-  document.getElementById(id+"_remark").style.display =
-    show ? "block" : "none";
+// Render dynamic documents
+function renderDocs(docs){
+  const container = document.getElementById("docsContainer");
+  container.innerHTML=""; // clear old docs
+  docs.forEach(doc=>{
+    let div=document.createElement("div");
+    div.className="doc";
+    div.innerHTML=`
+      <div class="doc-title">${doc.name}</div>
+      <div class="radio-line">
+        <label><input type="radio" name="${doc.name}" value="Yes" onclick="toggleRemark('${doc.name}',false)"> Yes</label>
+        <label><input type="radio" name="${doc.name}" value="No" onclick="toggleRemark('${doc.name}',true)"> No</label>
+      </div>
+      <input id="${doc.name}_remark" class="remark" placeholder="${doc.name} Remark" value="${doc.remark || ''}">
+    `;
+    container.appendChild(div);
+    if(doc.value=="Yes") document.querySelector(`input[name="${doc.name}"][value="Yes"]`).checked=true;
+    else if(doc.value=="No") document.querySelector(`input[name="${doc.name}"][value="No"]`).checked=true;
+    toggleRemark(doc.name, doc.value=="No");
+  });
 }
 
-/* Get radio value */
+function toggleRemark(id,show){ document.getElementById(id+"_remark").style.display=show?"block":"none"; }
+
 function radioVal(name){
   let r=document.getElementsByName(name);
   for(let i of r) if(i.checked) return i.value;
   return "";
 }
 
-/* Submit */
 function submitData(){
-  let payload={
-    regNo:regNo.value,
-    type:type.value,
-    docs:{
-      rc:radioVal("rc"), rc_remark:rc_remark.value,
-      ins:radioVal("ins"), ins_remark:ins_remark.value,
-      puc:radioVal("puc"), puc_remark:puc_remark.value
-    }
-  };
-
-  fetch(SCRIPT_URL,{
-    method:"POST",
-    body:JSON.stringify(payload)
-  }).then(()=>{
-    msg.innerHTML="✅ Data saved successfully";
+  const docsArray=[];
+  document.querySelectorAll(".doc").forEach(div=>{
+    const name=div.querySelector(".doc-title").innerText;
+    docsArray.push({
+      name:name,
+      value:radioVal(name),
+      remark:document.getElementById(name+"_remark").value
+    });
   });
+  const payload={ regNo:regNo.value, type:type.value, docs:docsArray };
+  fetch(SCRIPT_URL,{ method:"POST", body:JSON.stringify(payload) })
+    .then(()=> msg.innerHTML="✅ Data saved successfully");
 }
 </script>
-
 </body>
 </html>
