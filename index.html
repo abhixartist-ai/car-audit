@@ -1,44 +1,138 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Car Audit</title>
+
 <style>
-body{font-family:Arial;background:#f4f6fb;padding:12px}
-.card{max-width:520px;margin:auto;background:#fff;padding:15px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-select,input,button{width:100%;padding:9px;margin-top:8px;font-size:14px}
-button{background:#667eea;color:#fff;border:none;border-radius:6px}
-.doc{border:1px solid #ddd;padding:10px;border-radius:6px;margin-top:10px}
-.doc-title{font-weight:bold;margin-bottom:6px}
-.radio-line{display:flex;align-items:center;gap:15px}
-.radio-line label{display:flex;align-items:center;gap:5px;font-size:14px}
-.remark{display:none;margin-top:6px}
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:15px;
+}
+
+.card{
+  background:#fff;
+  width:100%;
+  max-width:520px;
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 10px 25px rgba(0,0,0,.2);
+}
+
+h3{
+  margin-top:0;
+  text-align:center;
+  color:#5a55d2;
+}
+
+label{font-size:14px;font-weight:600;margin-top:10px;display:block}
+
+select,input,button{
+  width:100%;
+  padding:10px;
+  margin-top:6px;
+  font-size:14px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+input[disabled]{background:#f3f3f3}
+
+button{
+  margin-top:16px;
+  background:#667eea;
+  color:#fff;
+  border:none;
+  font-size:15px;
+}
+
+button:active{transform:scale(.98)}
+
+.doc{
+  margin-top:12px;
+  border:1px solid #ddd;
+  padding:12px;
+  border-radius:10px;
+}
+
+.doc.error{
+  border:2px solid red;
+  background:#fff0f0;
+}
+
+.doc-title{
+  font-weight:bold;
+  color:#333;
+}
+
+.radio-line{
+  display:flex;
+  gap:20px;
+  margin-top:6px;
+}
+
+.radio-line label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-weight:normal;
+}
+
+.remark{
+  display:none;
+  margin-top:6px;
+}
+
+.error-text{
+  color:red;
+  font-size:13px;
+  text-align:center;
+  margin-top:10px;
+}
+.success{
+  color:green;
+  text-align:center;
+  margin-top:10px;
+}
 </style>
 </head>
+
 <body>
 <div class="card">
-<h3>Car Audit</h3>
+<h3>🚗 Car Audit</h3>
+
 <label>Car Reg No</label>
-<select id="regNo" onchange="loadCar()"><option value="">Select Reg No</option></select>
+<select id="regNo" onchange="loadCar()">
+  <option value="">Select Reg No</option>
+</select>
+
 <label>Type</label>
 <select id="type" onchange="reloadType()">
   <option value="SALE">Sale</option>
   <option value="PURCHASE">Purchase</option>
 </select>
+
 <input id="model" placeholder="Model" disabled>
 <input id="amount" placeholder="Amount" disabled>
 <input id="date" type="date" disabled>
-<hr>
+
 <div id="docsContainer"></div>
-<button onclick="submitData()">Save / Recheck</button>
-<p id="msg"></p>
+
+<button onclick="submitData()">Submit Audit</button>
+<div id="msg"></div>
 </div>
 
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwFherN-MJn4lxc5dFCKikjYx1vqm-NymFj0Eb833Wqk0fQKBpUs1s0JVXobZvQ3b74/exec";
 
-// Load Reg No list
+/* LOAD REG NO */
 fetch(SCRIPT_URL+"?action=list").then(r=>r.json()).then(list=>{
   list.forEach(c=>{
     let o=document.createElement("option");
@@ -50,73 +144,99 @@ fetch(SCRIPT_URL+"?action=list").then(r=>r.json()).then(list=>{
   });
 });
 
-// Load car info
+/* LOAD CAR */
 function loadCar(){
-  let opt=regNo.selectedOptions[0];
-  if(!opt) return;
-  let sale=opt.dataset.sale=="true";
-  let purchase=opt.dataset.purchase=="true";
-  if(sale && purchase){ type.disabled=false; } 
-  else if(sale){ type.value="SALE"; type.disabled=true; } 
-  else { type.value="PURCHASE"; type.disabled=true; }
+  let o=regNo.selectedOptions[0];
+  if(!o) return;
+  if(o.dataset.sale=="true" && o.dataset.purchase=="true"){
+    type.disabled=false;
+  }else if(o.dataset.sale=="true"){
+    type.value="SALE"; type.disabled=true;
+  }else{
+    type.value="PURCHASE"; type.disabled=true;
+  }
   reloadType();
 }
 
 function reloadType(){
-  if(!regNo.value) return;
   fetch(`${SCRIPT_URL}?action=load&regNo=${regNo.value}&type=${type.value}`)
   .then(r=>r.json())
   .then(d=>{
     model.value=d.model||"";
     amount.value=d.amount||"";
     date.value=d.date||"";
-    renderDocs(d.docs || []);
+    renderDocs(d.docs||[]);
   });
 }
 
-// Render dynamic documents
+/* RENDER DOCS */
 function renderDocs(docs){
-  const container = document.getElementById("docsContainer");
-  container.innerHTML=""; // clear old docs
+  docsContainer.innerHTML="";
   docs.forEach(doc=>{
     let div=document.createElement("div");
     div.className="doc";
     div.innerHTML=`
       <div class="doc-title">${doc.name}</div>
       <div class="radio-line">
-        <label><input type="radio" name="${doc.name}" value="Yes" onclick="toggleRemark('${doc.name}',false)"> Yes</label>
-        <label><input type="radio" name="${doc.name}" value="No" onclick="toggleRemark('${doc.name}',true)"> No</label>
+        <label><input type="radio" name="${doc.name}" value="Yes" onclick="toggleRemark('${doc.name}',false)">Yes</label>
+        <label><input type="radio" name="${doc.name}" value="No" onclick="toggleRemark('${doc.name}',true)">No</label>
       </div>
-      <input id="${doc.name}_remark" class="remark" placeholder="${doc.name} Remark" value="${doc.remark || ''}">
+      <input id="${doc.name}_remark" class="remark" placeholder="Remark">
     `;
-    container.appendChild(div);
-    if(doc.value=="Yes") document.querySelector(`input[name="${doc.name}"][value="Yes"]`).checked=true;
-    else if(doc.value=="No") document.querySelector(`input[name="${doc.name}"][value="No"]`).checked=true;
-    toggleRemark(doc.name, doc.value=="No");
+    docsContainer.appendChild(div);
+
+    if(doc.value){
+      document.querySelector(`input[name="${doc.name}"][value="${doc.value}"]`).checked=true;
+      toggleRemark(doc.name, doc.value=="No");
+      document.getElementById(doc.name+"_remark").value=doc.remark||"";
+    }
   });
 }
 
-function toggleRemark(id,show){ document.getElementById(id+"_remark").style.display=show?"block":"none"; }
-
-function radioVal(name){
-  let r=document.getElementsByName(name);
-  for(let i of r) if(i.checked) return i.value;
-  return "";
+function toggleRemark(id,show){
+  document.getElementById(id+"_remark").style.display=show?"block":"none";
 }
 
+/* SUBMIT WITH VALIDATION */
 function submitData(){
-  const docsArray=[];
-  document.querySelectorAll(".doc").forEach(div=>{
-    const name=div.querySelector(".doc-title").innerText;
-    docsArray.push({
+  msg.innerHTML="";
+  let valid=true;
+  let docs=[];
+
+  document.querySelectorAll(".doc").forEach(d=>{
+    d.classList.remove("error");
+    let name=d.querySelector(".doc-title").innerText;
+    let radios=d.querySelectorAll("input[type=radio]");
+    let selected="";
+    radios.forEach(r=>{ if(r.checked) selected=r.value; });
+
+    if(!selected){
+      valid=false;
+      d.classList.add("error");
+    }
+
+    docs.push({
       name:name,
-      value:radioVal(name),
+      value:selected,
       remark:document.getElementById(name+"_remark").value
     });
   });
-  const payload={ regNo:regNo.value, type:type.value, docs:docsArray };
-  fetch(SCRIPT_URL,{ method:"POST", body:JSON.stringify(payload) })
-    .then(()=> msg.innerHTML="✅ Data saved successfully");
+
+  if(!valid){
+    msg.innerHTML='<div class="error-text">⚠ Please select Yes / No for all documents</div>';
+    return;
+  }
+
+  fetch(SCRIPT_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      regNo:regNo.value,
+      type:type.value,
+      docs:docs
+    })
+  }).then(()=>{
+    msg.innerHTML='<div class="success">✅ Audit Saved Successfully</div>';
+  });
 }
 </script>
 </body>
